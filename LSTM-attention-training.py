@@ -39,7 +39,7 @@ class Config:
     models_folder: str = "./models"
     scaler: str = "minmax_scaler_power_cycle"
     trained_model: str = "lstm_autoencoder_power_cycle_20_TimeAttention_FeatureAttention.pth"
-    data_path: str = "../data/Power_Cycle_1779463.csv"
+    data_path: str = "./path/for/data/here"
     columns: list = field(default_factory=lambda: [
         "nfd-1-cps", "nfd-4-flux", "cont air counts", "ram-con-lvl", "ram-pool-lvl", "ram-wtr-lvl"])
 
