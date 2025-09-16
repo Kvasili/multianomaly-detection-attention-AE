@@ -2,11 +2,13 @@
 '''
     @Date: 07/21/2025
 
-    @Description: New training with attention mechanism for LSTM. Check the following repository for more information:
+    @Description: New training with attention mechanism for LSTM. 
+    
+    Check the following repository for more information:
     https://github.com/JulesBelveze/time-series-autoencoder/tree/master
 
     USAGE
-    python LSTM-attention-training-v5.py
+    python LSTM-attention-training.py
 
 '''
 
@@ -35,13 +37,10 @@ class Config:
     seq_len: int = 20
     learning_rate: float = 0.001
     models_folder: str = "./models"
-    # standard_scaler: str = "standard_scaler"
     scaler: str = "minmax_scaler_power_cycle"
-    # "lstm_autoencoder_power_cycle_20_TimeAttention_FeatureAttention.pth"
-    trained_model: str = 'test.pth'
-    data_path: str = "./data/Power_Cycle_1779463.csv"
+    trained_model: str = "lstm_autoencoder_power_cycle_20_TimeAttention_FeatureAttention.pth"
+    data_path: str = "../data/Power_Cycle_1779463.csv"
     columns: list = field(default_factory=lambda: [
-        # "Index", "nfd-3-pwr", "nfd-4-flux", "cam-cnt", "nfd-1-cps", "nfd-2-cr",
         "nfd-1-cps", "nfd-4-flux", "cont air counts", "ram-con-lvl", "ram-pool-lvl", "ram-wtr-lvl"])
 
 
@@ -102,8 +101,6 @@ def to_sequences_(x, seq_size):
 
     return np.array(x_values)
 
-
-# ---------- ATTENTION ENCODER ---------- #
 
 # ---- Feature Attention Module ---- #
 class FeatureAttention(nn.Module):
@@ -304,13 +301,9 @@ def main():
         val_dataset, batch_size=config.batch_size, shuffle=False)
 
     # # ---- Train the Model ---- #
-    # # ---- with Feature Attention ---- #
     model = AttentionLSTMAutoencoder(
         input_dim=train_dataset.shape[2], seq_len=config.seq_len)
 
-    # # with no attention
-    # model = LSTMAutoencoder(
-    #     input_dim=train_dataset.shape[2], seq_len=config.seq_len)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     loss_fn = nn.MSELoss()
 
@@ -333,13 +326,6 @@ def main():
             loss = loss_fn(outputs, batch)
             loss.backward(retain_graph=True)
 
-            # Attention grad check
-            # linear1_grad = model.encoder.attn[0].weight.grad.norm().item()
-            # linear2_grad = model.encoder.attn[2].weight.grad.norm().item()
-
-            # print(f"Attention Linear 1 grad norm: {linear1_grad}")
-            # print(f"Attention Linear 2 grad norm: {linear2_grad}")
-
             optimizer.step()
             epoch_loss += loss.item()
 
@@ -361,8 +347,7 @@ def main():
         print(f"Epoch {epoch + 1}/{config.epochs}, "
               f"Train Loss: {training_losses[-1]:.4f}, Val Loss: {validation_losses[-1]:.4f}")
 
-    # Before saving the model
-
+    # Before saving the model create the models folder if it does not exist
     if not os.path.exists(config.models_folder):
         os.makedirs(config.models_folder)
 
@@ -408,15 +393,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-'''
-
-    @Date: 07/10/2025
-    @Description: 
-
-
-    USAGE
-    python LSTM-attention-training-v5.py
-
-'''
