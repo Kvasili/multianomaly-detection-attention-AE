@@ -1,4 +1,4 @@
-,nfd-1-cps,nfd-3-pwr,nfd-4-flux,cont air counts,ram-con-lvl,ram-pool-lvl,ram-wtr-lvl,,CAM lbl,ram-con-LBL,ram-pool-LBL,ram-wtr-LBL
+,nfd-1-cps,nfd-3-pwr,nfd-4-flux,cont air counts,ram-con-lvl,ram-pool-lvl,ram-wtr-lvl,sequence,CAM lbl,ram-con-LBL,ram-pool-LBL,ram-wtr-LBL
 0,18850000,49.9251,46.0994,349.8920759,0.074801765,1.727650588,0.083472941,,0,0,0,0
 1,18840000,49.9325,46.0971,349.9009448,0.07196458,1.755763193,0.090252395,,0,0,0,0
 2,18840000,49.9504,46.0895,349.9076674,0.069169105,1.779061771,0.096006493,,0,0,0,0
