@@ -2,7 +2,9 @@
 '''
     @Date: 07/10/2025
 
-    @Description: 
+    @Description: This code evaluates a trained LSTM Autoencoder with Attention mechanism on a specific instance from an abnormal dataset.
+    it loads the model and the data, processes the data into sequences, and then computes the reconstruction and attention weights for the selected instance.
+    It visualizes the attention weights assigned to each feature over time, helping to understand which features the model focuses on during reconstruction.
 
 
     USAGE
@@ -33,8 +35,6 @@ class Config:
     seq_len: int = 20
     models_folder: str = "./models"
     min_max_scaler: str = "minmax_scaler_power_cycle"
-    # "lstm_autoencoder_attention_power_cycle_20_no_Attention.pth"
-    # "lstm_autoencoder_attention_power_cycle_20.pth"
     trained_model: str = "lstm_autoencoder_power_cycle_20_TimeAttention_FeatureAttention.pth"
     instance: int = 160  # Index of the instance to evaluate
 
@@ -108,9 +108,8 @@ def to_sequences_(x, seq_size):
 
     return np.array(x_values)
 
-# ---------- ATTENTION ENCODER ---------- #
 
-# ---- Feature Attention Module ---- #
+# Feature Attention Module
 
 
 class FeatureAttention(nn.Module):
@@ -191,7 +190,7 @@ class FeatureAttentionOverTime(nn.Module):
         return attn_matrix  # attention over time and features
 
 
-# # ---- Modified Autoencoder with Feature Attention ---- #
+#  Autoencoder with Feature Attention
 class AttentionLSTMAutoencoder(nn.Module):
     def __init__(self, input_dim, seq_len):
         super().__init__()
@@ -205,9 +204,6 @@ class AttentionLSTMAutoencoder(nn.Module):
         self.decoder_lstm1 = nn.LSTM(32, 64, batch_first=True)
         self.decoder_lstm2 = nn.LSTM(64, 128, batch_first=True)
         self.output_layer = nn.Linear(128, input_dim)
-
-        # self.feature_attention = FeatureAttention(
-        #     input_dim=input_dim, hidden_dim=32)
 
         # New Feature Attention Over Time
         self.feature_attention = FeatureAttention(
@@ -236,7 +232,17 @@ class AttentionLSTMAutoencoder(nn.Module):
             x, h_bottleneck)  # [batch, seq_len, input_dim]
 
         # Apply attention to input features, element-wise
-        attn_applied = x * attn_matrix  # [batch, seq_len, input_dim]
+        attn_applied_time = x * attn_matrix  # [batch, seq_len, input_dim]
+
+        # Combine both attentions (e.g., element-wise multiply or add)
+        combined_attention = attn_applied * \
+            attn_applied_time  # or use another combination
+
+        # Use attn_applied or attn_applied_time as input to encoder LSTM1
+        out, _ = self.encoder_lstm1(combined_attention)
+        out, _ = self.encoder_lstm2(out)
+        encoder_outputs, (h, _) = self.bottleneck(out)
+        h_bottleneck = h[-1]
 
         # Decoder input
         repeated = h_bottleneck.unsqueeze(1).repeat(1, self.seq_len, 1)
@@ -332,30 +338,6 @@ def main():
     for i, w in enumerate(attn_weights):
         print(f"Sensor {i}: weight = {w:.3f}")
 
-    # Plot original vs reconstructed signal for each sensor
-    plt.figure(figsize=(10, 8))
-    for plot_idx, i in enumerate(range(6), 1):  # indices 0 to 5
-        plt.subplot(6, 1, plot_idx)
-        plt.plot(original[:, i], label='Original', color='blue')
-        plt.plot(recon.squeeze(0).cpu().numpy()[
-                 :, i], label='Reconstructed', color='orange', linestyle='--')
-        # +1 to skip "Index"
-        plt.title(f'Sensor: ({config.columns[i]})')
-        plt.xlabel('Time Step')
-        plt.ylabel('Value')
-        plt.legend()
-        plt.tight_layout()
-    # plt.show()
-
-    # Plot reconstruction error per feature
-    plt.figure(figsize=(10, 6))
-    sns.heatmap(error.T, cmap='viridis', xticklabels=5, yticklabels=[
-                f"Sensor {i}" for i in range(len(config.labels))])
-    plt.title("Reconstruction Error per Sensor and Time")
-    plt.xlabel("Time step")
-    plt.ylabel("Sensor")
-    # plt.show()
-
     # Plot attention weights per feature as heatmap over time
     time_labels = list(
         range(config.instance, config.instance + config.seq_len))
@@ -400,16 +382,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-'''
-
-    @Date: 07/10/2025
-
-    @Description: 
-
-
-    USAGE
-    python LSTM-attention-evaluate.py
-
-'''
